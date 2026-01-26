@@ -1,5 +1,6 @@
 #Manuscript Figures
-#Last Updated Dec 9 2025 with new results
+#Zoe Rand
+#Note that current file paths should be adjusted to where model results are stored
 library(tidyverse)
 library(posterior) #manipulating chains
 library(patchwork) #plotting
@@ -82,7 +83,7 @@ draws_list<-list(draws_mat_uR_112,
 
 
 #posterior predictive for base model
-post_pred_base<-read.csv("Code/Results/PostPred_BaseModel_uniformR_112.csv")
+post_pred_base<-read.csv("code/results/PostPred_BaseModel_uniformR_112.csv")
 post_pred_base_mat<-as_draws_matrix(post_pred_base)
 
 # Helper Functions ------------------------------------------------------

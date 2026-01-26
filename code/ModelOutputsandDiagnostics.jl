@@ -2,6 +2,8 @@
 #"BaseModelandSensitivities.jl" as well as "JSVModel.jl"
 #code and checks diagnostics and saves the posteriors for plotting
 #and results
+#Zoe Rand
+#Note that file paths may need to be adjusted depedning on where results are stored
 
 using Turing
 using CSV

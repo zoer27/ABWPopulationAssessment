@@ -2,6 +2,7 @@
 #Same as base model but includes JSV data and likelihood
 #Zoe Rand
 #last updated 12/5/25
+#Note that file paths for storing results should be specified
 
 using Optim
 using Turing

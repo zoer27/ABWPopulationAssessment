@@ -11,6 +11,7 @@
 #can only do 1, 2, or 4 chains because each chain is hard coded in 
 #does not do parallel sampling 
 #uses slice sampling MCMC algorithm
+#Note that file paths for storing results should be specified
 
 #Zoe Rand
 #last updated 8/15/25
