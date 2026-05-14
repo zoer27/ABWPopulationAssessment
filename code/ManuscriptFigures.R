@@ -1,12 +1,10 @@
 #Manuscript Figures
-#Zoe Rand
-#Note that current file paths should be adjusted to where model results are stored
+#Last Updated 14 May 2026 with changes from revision
 library(tidyverse)
 library(posterior) #manipulating chains
 library(patchwork) #plotting
 library(scales) #plotting
 library(ggforce) #plotting
-library(paletteer) # for colors
 
 
 # Read in Data ------------------------------------------------------------
@@ -19,7 +17,6 @@ abund_dat<-read_csv("data/Abund_Est.csv")
 abund_dat<-abund_dat[abund_dat$N > 6,]
 JSV_dat<-read_csv("data/JSV.csv")
 photo_id<-read_csv("data/photoID_abund.csv")
-
 
 #turn CVS into confidence intervals
 abund_dat<-abund_dat[abund_dat$N > 6,]
@@ -34,6 +31,7 @@ photo_id$Upper<-photo_id$N*photo_id$C
 #other constants
 #number of draws
 basemod_ndraws<-4000
+#photo_ndraws<-5000
 abund_years_J<-rep(c(abund_dat$Year, photo_id$Year[1], JSV_dat$Year), basemod_ndraws)
 abund_years_B<-rep(c(abund_dat$Year, photo_id$Year[1]), basemod_ndraws)
 abund_years<-tibble(Year = c(abund_years_J, abund_years_B), model = c(rep("JSV", length(abund_years_J)), rep("base", length(abund_years_B))))
@@ -149,7 +147,7 @@ bckgrd<-"transparent"
 model_names_txt<-c(
   "Base", 
   "JSV",
-  "Call density r",
+  "Song intensity r",
   "Adjusted \u03B8  ",
   "Fixed survival",
   "No photo ID",
@@ -160,7 +158,7 @@ model_names_txt<-c(
 
 model_names<-factor(model_names_txt, levels = c("Base", 
                                                  "JSV",
-                                                 "Call density r",
+                                                 "Song intensity r",
                                                  "Adjusted \u03B8  ",
                                                  "Fixed survival",
                                                  "No photo ID",
@@ -172,7 +170,7 @@ levels(model_names)
 names(pal)<-model_names
 
 #color palette for data sources
-data_pal <- c("#133C55", "#59A5D8", "#91E5F6")
+data_pal<-c("#1b9e77", "#7570b3", "#59A5D8")
 
 # Catch data plot--------------------------------------------------------------
 head(catch_dat)
@@ -180,7 +178,7 @@ catch_plot<-ggplot(catch_dat[-1,]) + geom_col(aes(x = Year, y = ABW_catch), fill
   theme_classic() + 
   scale_x_continuous(expand =c(0,0)) + 
   scale_y_continuous(expand = c(0, 0)) + 
-  labs(x = "Whaling season", y = "Catch (#s)")
+  labs(x = "Whaling season", y = "Catches")
 catch_plot
 ggsave("Figures/Manuscript/CatchPlot.png",catch_plot,  width = 4, height = 3, units = "in", dpi = 600)
 
@@ -239,7 +237,7 @@ plot_K<-function(K_post, base, K_post_base){
     kpostplot<- kpostplot + geom_density(data = K_post_base, aes(x = K, y = after_stat(density), group = model, 
                                                                 color = model, linewidth = model), key_glyph = draw_key_path)
   }
-    kpostplot<-kpostplot + theme_classic() + labs(x = "Carrying capacity (K, # thousands)", y = "density", color = "Model", linewidth = "Model") + 
+    kpostplot<-kpostplot + theme_classic() + labs(x = "Carrying capacity (K, thousands)", y = "density", color = "Model", linewidth = "Model") + 
     scale_x_continuous(expand = c(0.01,0.01), breaks = seq(150000, 400000, by = 20000), 
                        label = seq(150, 400, by = 20)) + 
     #coord_cartesian(xlim = c(140000, 400000)) +
@@ -278,7 +276,7 @@ plot_Nmin<-function(Nmin_post, prior, Nmin_prior, Nmin_prior_dens, base, Nmin_po
                                                                         color = model, linewidth = model), key_glyph = draw_key_path)
   }
   nminpostplot <- nminpostplot + theme_classic() + 
-    labs(x = "Minimum population size (#s)", y = "density", color = "Model", linewidth = "Model") + 
+    labs(x = "Popualtion size in 1973", y = "density", color = "Model", linewidth = "Model") + 
     scale_x_continuous(expand = c(0.03,0.03), limits = c(50, 2000))+ 
     scale_y_continuous(expand = c(0.0001,0)) +
     scale_color_manual(values = pal) +
@@ -377,7 +375,7 @@ plot_N2024<-function(N2024_post, base, N2024_post_base){
                                                                       linewidth = model), alpha = 1, key_glyph = draw_key_path)
   }
     N2024plot<- N2024plot + theme_classic() + 
-    labs(x = "Projected population in 2024 (#s)", y = "density", color = "Model", linewidth = "Model") + 
+    labs(x = "Population size in 2024", y = "density", color = "Model", linewidth = "Model") + 
     scale_x_continuous(limits = c(1000, 14000), expand = c(0.02,0.02), breaks = seq(1000, 14000, by = 2000)) + 
     scale_color_manual(values = pal) +
     scale_linewidth_manual(values = c(1, 1, 1, 1, 1, 1, 1, 1, 2)) +
@@ -396,7 +394,6 @@ plot_N2024<-function(N2024_post, base, N2024_post_base){
   return(N2024plot)
 }
 # Base Model --------------------------------------------------------------
-#Posterior densities
 #R
 
 base_r_post<-subset_draws_par(draws_mat_uR_112, "r", "Base")
@@ -465,14 +462,16 @@ FullPop_annot<-ggplot(Npop_post) +
   geom_line(aes(x = year, y = `50%`), color = "deepskyblue4") +
   annotate("point", x = c(1904, 1973, 2024), y = c(Npop_post$`50%`[1],Npop_post$`50%`[69], Npop_post$`50%`[121]), 
            color = "deepskyblue4", size = 3) +
-  annotate("text", x = c(1913, 1973, 2023), y = c(Npop_post$`50%`[1]+68000, Npop_post$`50%`[69] + 52000, Npop_post$`50%`[121] + 52000), 
+  annotate("text", x = c(1913, 1973, 2023), y = c(Npop_post$`50%`[1]+75000, Npop_post$`50%`[69] + 66000, Npop_post$`50%`[121] + 66000), 
            label = formatC(c(Npop_post$`50%`[1], Npop_post$`50%`[69], Npop_post$`50%`[121]), big.mark = ",", digits = 0, format = "f"), color = "deepskyblue4", size = 4, hjust = 0.5, fontface = "bold") +
-  annotate("text", x = c(1914.5, 1973, 2023), y = c(Npop_post$`50%`[1]+30000,  Npop_post$`50%`[69] + 24000, Npop_post$`50%`[121] + 25000), 
+  annotate("text", x = c(1916.5, 1973, 2022), c(Npop_post$`50%`[1]+63000, Npop_post$`50%`[69] + 53000, Npop_post$`50%`[121] + 53000), 
+           label = c("(168,000-276,000)", "(147-1,099)", "(1,874-8,395)"), color = "deepskyblue4",size = 3.3) + 
+  annotate("text", x = c(1914.5, 1973, 2023), y = c(Npop_post$`50%`[1]+35000,  Npop_post$`50%`[69] + 24000, Npop_post$`50%`[121] + 25000), 
            label = c("Estimated\npre-whaling\npopulation size", "Estimated\nminimum\npopulation size", "Current\npopulation\nsize"), color = "black", size = 3.3, hjust = 0.5) +
   scale_x_continuous(expand = c(0.01,0),limits = c(1904, 2029), breaks = seq(1904,2024, by = 10)) + 
   scale_y_continuous(expand = c(0,0), limits = c(0, 310000), breaks = seq(0,300000, by = 50000), label = comma) +
   coord_cartesian(clip = "off") +
-  theme_classic() + labs(x = "Year", y = "Antarctic blue whale population size (#s)") + 
+  theme_classic() + labs(x = "Year", y = "Antarctic blue whale population size") + 
   theme(text = element_text(size = 12, family = "Arial"), 
         plot.tag.position = c(0, 1), 
         plot.tag = element_text(hjust = -3), 
@@ -493,9 +492,9 @@ FullPop<-ggplot(Npop_post) +
   theme_classic() + labs(x = "Season", y = "Population size") + 
   theme(text = element_text(size = 18, family = "Arial"), 
         plot.tag.position = c(0, 1), 
-        plot.tag = element_text(hjust = -3), 
+        plot.tag = element_text(hjust = -3))#, 
         #legend.position = "none", 
-        axis.text.x = element_text(angle = 90))
+        #axis.text.x = element_text(angle = 90))
 
 #add abundance estimates
 
@@ -514,7 +513,7 @@ Abund_zoom<-FullPop + coord_cartesian(xlim = c(1978, 2025.5), ylim = c(0, 6000),
   geom_linerange(data = abund_dat_plot[abund_dat_plot$Source != "Hamabe 2023",], aes(x = Year, ymin = AddLower, ymax = AddUpper), color = data_pal[1], linewidth = 0.5) +
   geom_linerange(data = abund_dat_plot[abund_dat_plot$Source != "Hamabe 2023",], aes(x = Year, ymin = Lower, ymax = Upper), color = data_pal[1], linewidth = 1.3) +
   geom_point(data = abund_dat_plot[abund_dat_plot$Source != "Hamabe 2023",], aes(x = Year, y = N), color = data_pal[1], size = 2) + 
-  geom_point(data = photo_id[2,], aes(x = Year, y = N), color = data_pal[3], shape = 15, size = 3) +
+  geom_point(data = photo_id[2,], aes(x = Year, y = N), color = data_pal[3], shape = 8, size = 3) +
   geom_linerange(data = photo_id[2,], aes(x = Year, ymin = Lower, ymax = Upper), color = data_pal[3], linewidth = 1.3) +
   labs(tag = "a)") #+ theme(plot.tag = element_text(hjust = -3))
 Abund_zoom
@@ -533,9 +532,9 @@ Adjusted_pop<-ggplot(qN_post) +
   theme_classic() + labs(x = "Season", y = "Adjusted population size (q*N)") + 
   theme(text = element_text(size = 18, family = "Arial"), 
         plot.tag.position = c(0, 1), 
-        plot.tag = element_text(hjust = -3), 
+        plot.tag = element_text(hjust = -3))#, 
         #legend.position = "none", 
-        axis.text.x = element_text(angle = 90))
+        #axis.text.x = element_text(angle = 90))
 Adjusted_pop 
 
 Jarpa_zoom<-Adjusted_pop + coord_cartesian(xlim = c(1978, 2025), ylim = c(0, 3000), expand = FALSE) +
@@ -547,15 +546,27 @@ Jarpa_zoom<-Adjusted_pop + coord_cartesian(xlim = c(1978, 2025), ylim = c(0, 300
   labs(tag = "b)") #+ theme(plot.tag = element_text(hjust = -2.5))
 Jarpa_zoom
 
+#plot together
+# des<-"
+# AAAABB
+# AAAACC"
+# pop_plot<-FullPop + Abund_zoom + Jarpa_zoom + 
+#   plot_layout(design = des, guides = "collect", tag_level = "new") +
+#   plot_annotation(tag_levels = "a", tag_suffix = ")") & 
+#   theme(plot.tag.location = "plot", plot.tag.position = c(0.05, 1), text = element_text(size = 14, family = "Arial"), legend.position = "bottom")
+# 
+# pop_plot
+# #save
+# ggsave("Figures/Manuscript/base_model_population_trajectory.png", pop_plot, width = 8, height = 5, units = "in", dpi = 600)
 
 #posterior predictive
 PPout_base<-post_out(post_pred_base, "base")
 
 PP_S_base<-PPout_base %>% filter(source == "SOWER") %>%
-  ggplot() + geom_violin(aes(x = as.factor(year), y = value), scale = "width", width = 0.4, fill = data_pal[1], color = "gray70") +
-  geom_linerange(data = abund_dat_plot[abund_dat_plot$Source != "Hamabe 2023",], aes(x = as.factor(Year), ymin = AddLower, ymax = AddUpper), color = "white", linewidth = 0.5) +
-  geom_linerange(data = abund_dat_plot[abund_dat_plot$Source != "Hamabe 2023",], aes(x = as.factor(Year), ymin = Lower, ymax = Upper), color = "white", linewidth = 1.3) +
-  geom_point(data = abund_dat_plot[abund_dat_plot$Source != "Hamabe 2023",], aes(x = as.factor(Year), y = N), color = "white") +
+  ggplot() + geom_violin(aes(x = as.factor(year), y = value), scale = "width", width = 0.4, fill = "gray80", color = "gray80") +
+  geom_linerange(data = abund_dat_plot[abund_dat_plot$Source != "Hamabe 2023",], aes(x = as.factor(Year), ymin = AddLower, ymax = AddUpper), color = data_pal[1], linewidth = 0.5) +
+  geom_linerange(data = abund_dat_plot[abund_dat_plot$Source != "Hamabe 2023",], aes(x = as.factor(Year), ymin = Lower, ymax = Upper), color = data_pal[1], linewidth = 1.3) +
+  geom_point(data = abund_dat_plot[abund_dat_plot$Source != "Hamabe 2023",], aes(x = as.factor(Year), y = N), color = data_pal[1], size = 3) +
   theme_classic() + 
   coord_cartesian(ylim = c(0, 5000), expand = FALSE) +
   labs(x = "Year", y = "Abundance estimate") +
@@ -564,10 +575,10 @@ PP_S_base<-PPout_base %>% filter(source == "SOWER") %>%
 PP_S_base
 PPout_base$Year<-factor(PPout_base$year, levels = sort(abund_dat_plot$Year[-c(1:3)]))
 PP_J_base<-PPout_base%>% filter(source == "JARPA") %>%
-  ggplot() + geom_violin(aes(x = Year, y = value), scale = "width", width = 0.5, fill = data_pal[2], alpha = 1, color = "gray70") +
-  geom_linerange(data = abund_dat_plot[abund_dat_plot$Source == "Hamabe 2023",], aes(x = as.factor(Year), ymin = AddLower, ymax = AddUpper), color = "white", linewidth = 0.5) + 
-  geom_linerange(data = abund_dat_plot[abund_dat_plot$Source == "Hamabe 2023",], aes(x = as.factor(Year), ymin = Lower, ymax = Upper), color = "white", linewidth = 1.3) +
-  geom_point(data = abund_dat_plot[abund_dat_plot$Source == "Hamabe 2023",], aes(x = as.factor(Year), y = N), shape = 17, color = "white") +
+  ggplot() + geom_violin(aes(x = Year, y = value), scale = "width", width = 0.5, fill = "gray80", alpha = 1, color = "gray80") +
+  geom_linerange(data = abund_dat_plot[abund_dat_plot$Source == "Hamabe 2023",], aes(x = as.factor(Year), ymin = AddLower, ymax = AddUpper), color = data_pal[2], linewidth = 0.5) + 
+  geom_linerange(data = abund_dat_plot[abund_dat_plot$Source == "Hamabe 2023",], aes(x = as.factor(Year), ymin = Lower, ymax = Upper), color = data_pal[2], linewidth = 1.3) +
+  geom_point(data = abund_dat_plot[abund_dat_plot$Source == "Hamabe 2023",], aes(x = as.factor(Year), y = N), shape = 17, size = 3, color = data_pal[2]) +
   theme_classic() + 
   coord_cartesian(ylim = c(0, 3000), expand = FALSE) +
   labs(x = "Year", y = "Abundance estimate") +
@@ -579,9 +590,9 @@ PP_J_base<-PPout_base%>% filter(source == "JARPA") %>%
 PP_J_base
 
 PP_P_base<-PPout_base %>% filter(source == "Photo ID") %>% 
-  ggplot() + geom_violin(aes(x = as.factor(year), y = value), scale = "width", width = 0.2, fill = data_pal[3], alpha = 1, color = "gray70") +
-  geom_linerange(data = photo_id[2,], aes(x = as.factor(Year), ymin = Lower, ymax = Upper), color = "white") +
-  geom_point(data = photo_id[2,], aes(x = as.factor(Year), y = N), shape = 8, color = "white") +
+  ggplot() + geom_violin(aes(x = as.factor(year), y = value), scale = "width", fill = "gray80", alpha = 1, color = "gray80") +
+  geom_linerange(data = photo_id[2,], aes(x = as.factor(Year), ymin = Lower, ymax = Upper), color = data_pal[3], linewidth = 1.3) +
+  geom_point(data = photo_id[2,], aes(x = as.factor(Year), y = N), shape = 8, size = 3, color = data_pal[3]) +
   theme_classic() + 
   coord_cartesian(ylim = c(0, 12000), expand = FALSE) +
   labs(x = "Year", y = "Abundance estimate") +
@@ -677,7 +688,8 @@ sens_N2024_plot<-plot_N2024(sens_N2024_post, base = FALSE, N2024_post_base = bas
 sens_plots<-sens_r_postplot + sens_K_postplot + sens_Nmin_postplot + sens_N2024_plot +
   plot_layout(ncol = 2, guides = "collect", axis_titles = "collect_y", tag_level = "new") +
   plot_annotation(tag_levels = "a", tag_suffix = ")") & 
-  theme(plot.tag.location = "panel", plot.tag.position = c(0.05, 1), text = element_text(size = 14, family = "Arial"))
+  theme(plot.tag.location = "panel", plot.tag.position = c(0.05, 1), text = element_text(size = 14, family = "Arial"), 
+        plot.margin = margin(r = 12, t = 5, b = 5, l = 5))
 sens_plots
 
 #save
