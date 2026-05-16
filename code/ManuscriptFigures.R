@@ -1,5 +1,5 @@
 #Manuscript Figures
-#Last Updated 14 May 2026 with changes from revision
+#Last Updated 15 May 2026 with changes from revision
 library(tidyverse)
 library(posterior) #manipulating chains
 library(patchwork) #plotting
@@ -84,6 +84,8 @@ draws_list<-list(draws_mat_uR_112,
 post_pred_base<-read.csv("code/results/PostPred_BaseModel_uniformR_112.csv")
 post_pred_base_mat<-as_draws_matrix(post_pred_base)
 
+#priors from base model
+priors_base<-read_csv("code/results/Priors_BaseModel_uniformR.csv")
 # Helper Functions ------------------------------------------------------
 #subset draws by parameter
 subset_draws_par<-function(draws_mat, par, mod){
@@ -185,15 +187,15 @@ ggsave("Figures/Manuscript/CatchPlot.png",catch_plot,  width = 4, height = 3, un
 
 # Plotting Functions ------------------------------------------------------
 
-plot_R<-function(r_post, prior, r_prior, r_prior_dens, base, r_post_base){
+plot_R<-function(r_post, prior, r_prior, base, r_post_base){
   if(base){
     rpostplot<-ggplot() + 
       geom_density(data = r_post, aes(x = r, y = after_stat(density), group = model),fill = "gray80", 
                    key_glyph = draw_key_path, adjust = 1.2)
   }
-    if(prior){
-  rpostplot<- rpostplot + geom_density(aes(x = r_prior, y = r_prior_dens), linetype = "dotted") 
-    }
+  if(prior){
+    rpostplot<- rpostplot + geom_density(aes(x = r_prior), linetype = "dotted") 
+  }
   if(!base){
     rpostplot<-ggplot() + 
       geom_density(data = r_post, aes(x = r, y = after_stat(density), group = model, color = model, linewidth = model),fill = NA, 
@@ -209,15 +211,15 @@ plot_R<-function(r_post, prior, r_prior, r_prior_dens, base, r_post_base){
     guides(color = guide_legend(reverse = TRUE), linewidth = guide_legend(reverse = TRUE)) +
     scale_x_continuous(expand = c(0,0), limits  = c(0,0.12), breaks = c(0.01, 0.03, 0.05, 0.07, 0.09, 0.11)) + 
     scale_y_continuous(expand = c(0,0.1)) + theme(panel.background = element_rect(fill = bckgrd), 
-                                              plot.background = element_rect(fill = bckgrd),
-                                              panel.border = element_blank(),
-                                              #text = element_text(size = 18, family = "Arial"),
-                                              plot.tag.position = c(0, 1), 
-                                              #plot.tag = element_text(vjust = 1.3, hjust = -1), 
-                                              axis.text.y = element_blank(), 
-                                              axis.ticks.y = element_blank(), 
-                                              axis.title.x = element_text(vjust=1))
-                                              #legend.position = "none")
+                                                  plot.background = element_rect(fill = bckgrd),
+                                                  panel.border = element_blank(),
+                                                  #text = element_text(size = 18, family = "Arial"),
+                                                  plot.tag.position = c(0, 1), 
+                                                  #plot.tag = element_text(vjust = 1.3, hjust = -1), 
+                                                  axis.text.y = element_blank(), 
+                                                  axis.ticks.y = element_blank(), 
+                                                  axis.title.x = element_text(vjust=1))
+  #legend.position = "none")
   print(rpostplot)
   return(rpostplot)
 }
@@ -235,9 +237,9 @@ plot_K<-function(K_post, base, K_post_base){
                                       color = model, linewidth = model), key_glyph = draw_key_path, 
                    adjust = 1.2) 
     kpostplot<- kpostplot + geom_density(data = K_post_base, aes(x = K, y = after_stat(density), group = model, 
-                                                                color = model, linewidth = model), key_glyph = draw_key_path)
+                                                                 color = model, linewidth = model), key_glyph = draw_key_path)
   }
-    kpostplot<-kpostplot + theme_classic() + labs(x = "Carrying capacity (K, thousands)", y = "density", color = "Model", linewidth = "Model") + 
+  kpostplot<-kpostplot + theme_classic() + labs(x = "Carrying capacity (K, thousands)", y = "density", color = "Model", linewidth = "Model") + 
     scale_x_continuous(expand = c(0.01,0.01), breaks = seq(150000, 400000, by = 20000), 
                        label = seq(150, 400, by = 20)) + 
     #coord_cartesian(xlim = c(140000, 400000)) +
@@ -258,22 +260,22 @@ plot_K<-function(K_post, base, K_post_base){
   return(kpostplot)
 }
 
-plot_Nmin<-function(Nmin_post, prior, Nmin_prior, Nmin_prior_dens, base, Nmin_post_base){
+plot_Nmin<-function(Nmin_post, prior, Nmin_prior, base, Nmin_post_base){
   if(base){
     nminpostplot<-ggplot() + 
       geom_density(data = Nmin_post, aes(x = Nmin, y = after_stat(density), group = model), 
-                                         fill = "gray80",
+                   fill = "gray80",
                    key_glyph = draw_key_path, adjust = 1.2)
   }
   if(prior){
-    nminpostplot<- nminpostplot + geom_density(aes(x = Nmin_prior, y = Nmin_prior_dens), linetype = "dotted")
+    nminpostplot<- nminpostplot + geom_density(aes(x = Nmin_prior), linetype = "dotted")
   }
   if(!base){
     nminpostplot<-ggplot() + 
       geom_density(data = Nmin_post, aes(x = Nmin, y = after_stat(density), group = model, 
                                          color = model, linewidth = model), key_glyph = draw_key_path, adjust = 1.2)
     nminpostplot<- nminpostplot + geom_density(data = Nmin_post_base, aes(x = Nmin, y = after_stat(density), group = model, 
-                                                                        color = model, linewidth = model), key_glyph = draw_key_path)
+                                                                          color = model, linewidth = model), key_glyph = draw_key_path)
   }
   nminpostplot <- nminpostplot + theme_classic() + 
     labs(x = "Popualtion size in 1973", y = "density", color = "Model", linewidth = "Model") + 
@@ -296,7 +298,7 @@ plot_Nmin<-function(Nmin_post, prior, Nmin_prior, Nmin_prior_dens, base, Nmin_po
 }
 
 
-plot_addCV<-function(add_CVpost, prior, addCV_prior, addCV_prior_dens, source){
+plot_addCV<-function(add_CVpost, prior, addCV_prior, source){
   if(source == "JARPA"){
     colnames(add_CVpost)<-gsub("addCV_Ham", "addCV", colnames(add_CVpost))
     title <- "Additional CV (JARPA)"
@@ -311,8 +313,8 @@ plot_addCV<-function(add_CVpost, prior, addCV_prior, addCV_prior_dens, source){
     geom_density(data = add_CVpost, aes(x = addCV, y = after_stat(density), group = as.factor(model)), 
                  alpha = 1, key_glyph = draw_key_path, adjust = 1.2, fill = "gray80")
   if(prior){
-      addCVplot <- addCVplot + geom_line(aes(x = addCV_prior, y = addCV_prior_dens, group = 1), linetype = "dotted")
-    }
+    addCVplot <- addCVplot + geom_density(aes(x = addCV_prior, group = 1), linetype = "dotted")
+  }
   addCVplot <- addCVplot + theme_classic() + labs(x = title, y = "density", color = "Model", linewidth = "Model") +
     scale_color_manual(values = pal) +
     scale_linewidth_manual(values = c(1, 1, 1, 1, 1, 1, 1)) +
@@ -337,9 +339,9 @@ plot_addCV<-function(add_CVpost, prior, addCV_prior, addCV_prior_dens, source){
 plot_depletion<-function(Nmin_div_k_post){
   depl_plot<-ggplot() + 
     geom_density(data = Nmin_div_k_post, aes(x = Nmin_div_K, y = after_stat(density),
-                                       group = as.factor((model))),alpha = 1, 
+                                             group = as.factor((model))),alpha = 1, 
                  key_glyph = draw_key_path, adjust = 1.2, fill = "gray80") + 
-    theme_classic() + labs(x = "Minimum population/K", y = "density", color = "Model") + 
+    theme_classic() + labs(x = "Population size in 1973/K", y = "density", color = "Model") + 
     scale_color_manual(values = pal) +
     scale_linewidth_manual(values = c(1, 1, 1, 1, 1, 1, 1, 2))+
     guides(color = guide_legend(reverse = TRUE), linewidth = guide_legend(reverse = TRUE)) +
@@ -374,7 +376,7 @@ plot_N2024<-function(N2024_post, base, N2024_post_base){
                                                                       group = model, color = model,
                                                                       linewidth = model), alpha = 1, key_glyph = draw_key_path)
   }
-    N2024plot<- N2024plot + theme_classic() + 
+  N2024plot<- N2024plot + theme_classic() + 
     labs(x = "Population size in 2024", y = "density", color = "Model", linewidth = "Model") + 
     scale_x_continuous(limits = c(1000, 14000), expand = c(0.02,0.02), breaks = seq(1000, 14000, by = 2000)) + 
     scale_color_manual(values = pal) +
@@ -395,12 +397,9 @@ plot_N2024<-function(N2024_post, base, N2024_post_base){
 }
 # Base Model --------------------------------------------------------------
 #R
-
 base_r_post<-subset_draws_par(draws_mat_uR_112, "r", "Base")
-Base_r_prior<-runif(10000, 0, 0.115)
-Base_r_prior_dens<-dunif(Base_r_prior, 0, 0.115)
-
-Base_rpostplot<- plot_R(base_r_post, prior = TRUE, r_prior = Base_r_prior, r_prior_dens = Base_r_prior_dens, base = TRUE, r_post_base = NULL)
+Base_r_prior<-priors_base$r
+Base_rpostplot<- plot_R(base_r_post, prior = TRUE, r_prior = Base_r_prior, base = TRUE, r_post_base = NULL)
 
 Base_rpostplot
 
@@ -411,25 +410,30 @@ base_Kpostplot<-plot_K(base_K_post, base = TRUE, K_post_base = NULL)
 
 #Nmin
 base_Nmin_post<-subset_draws_par(draws_mat_uR_112, "Nmin", "Base")
-base_Nmin_prior<-runif(10000, log(106), log(2000))
-base_Nmin_prior_exp<-exp(base_Nmin_prior)
-base_Nmin_prior_dens<-dunif(base_Nmin_prior, log(106), log(2000))
-base_Nmin_prior_dens2<-base_Nmin_prior_dens/sum(base_Nmin_prior_dens) #normalize density
+base_Nmin_prior<-priors_base$lnN1973
 
-base_nmin_postplot<-plot_Nmin(base_Nmin_post, prior = TRUE, Nmin_prior = base_Nmin_prior_exp, Nmin_prior_dens = base_Nmin_prior_dens2 + 0.0005, base = TRUE, Nmin_post_base = NULL)
+#plot on log scale
+base_lN1973_post<-subset_draws_par(draws_mat_uR_112, "lnN1973", "Base") %>% rename(Nmin = lnN1973)
+
+ggplot() + geom_density(data = base_lN1973_post, aes(x = Nmin), fill = "gray") + 
+  geom_density(aes(x = base_Nmin_prior), fill = NA, linetype = "dotted") + 
+  theme_classic()
+
+#plot on real scale
+base_Nmin_prior_exp<-exp(base_Nmin_prior)
+
+base_nmin_postplot<-plot_Nmin(base_Nmin_post, prior = TRUE, Nmin_prior = base_Nmin_prior_exp, base = TRUE, Nmin_post_base = NULL)
 
 #add CV Branch
 base_addCV_Branch_post<-subset_draws_par(draws_mat_uR_112, "addCV_Branch", "Base")
-base_addCV_prior<-rexp(10000, 1)
-base_addCV_prior_dens<-dexp(base_addCV_prior, 1)
-
-base_addCV_Branch_postplot<-plot_addCV(base_addCV_Branch_post, prior = TRUE, addCV_prior = base_addCV_prior, addCV_prior_dens = base_addCV_prior_dens, source = "SOWER")
+base_addCV_prior<-priors_base$addCV_Branch
+test_base_addCV_prior<-sample(priors_base$addCV_Branch, 1000)
+base_addCV_Branch_postplot<-plot_addCV(base_addCV_Branch_post, prior = TRUE, addCV_prior = base_addCV_prior, source = "SOWER")
 
 #add CV Ham
 base_addCV_Ham_post<-subset_draws_par(draws_mat_uR_112, "addCV_Ham", "Base")
-base_addCV_Ham_prior<-rexp(10000, 1)
-base_addCV_Ham_prior_dens<-dexp(base_addCV_Ham_prior, 1)
-base_addCV_Ham_postplot<-plot_addCV(base_addCV_Ham_post, prior = TRUE, addCV_prior = base_addCV_Ham_prior, addCV_prior_dens = base_addCV_Ham_prior_dens, source = "JARPA")
+base_addCV_prior_Ham<-priors_base$addCV_Ham
+base_addCV_Ham_postplot<-plot_addCV(base_addCV_Ham_post, prior = TRUE, addCV_prior = base_addCV_prior_Ham, source = "JARPA")
 
 
 #Depletion (Nmin/K)
@@ -449,8 +453,9 @@ base_plots<-Base_rpostplot + base_Kpostplot + base_nmin_postplot + base_depl_plo
 
 base_plots
 
+
 #save
-ggsave("Figures/Manuscript/BaseModelPosteriors.png", base_plots, width = 8, height = 10, units = "in", dpi = 600)
+#ggsave("Figures/Manuscript/BaseModelPosteriors.png", base_plots, width = 8, height = 10, units = "in", dpi = 600)
 
 #population trajectory
 Npop_post<-subset_npop(draws_mat_uR_112, "Base")
@@ -480,7 +485,7 @@ FullPop_annot<-ggplot(Npop_post) +
 
 FullPop_annot
 
-ggsave("Figures/Manuscript/Poptraj.png", FullPop_annot, width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("Figures/Manuscript/Poptraj.png", FullPop_annot, width = 6, height = 4, units = "in", dpi = 600)
 
 #model fit
 FullPop<-ggplot(Npop_post) + 
@@ -546,18 +551,6 @@ Jarpa_zoom<-Adjusted_pop + coord_cartesian(xlim = c(1978, 2025), ylim = c(0, 300
   labs(tag = "b)") #+ theme(plot.tag = element_text(hjust = -2.5))
 Jarpa_zoom
 
-#plot together
-# des<-"
-# AAAABB
-# AAAACC"
-# pop_plot<-FullPop + Abund_zoom + Jarpa_zoom + 
-#   plot_layout(design = des, guides = "collect", tag_level = "new") +
-#   plot_annotation(tag_levels = "a", tag_suffix = ")") & 
-#   theme(plot.tag.location = "plot", plot.tag.position = c(0.05, 1), text = element_text(size = 14, family = "Arial"), legend.position = "bottom")
-# 
-# pop_plot
-# #save
-# ggsave("Figures/Manuscript/base_model_population_trajectory.png", pop_plot, width = 8, height = 5, units = "in", dpi = 600)
 
 #posterior predictive
 PPout_base<-post_out(post_pred_base, "base")
@@ -616,7 +609,7 @@ model_fit<-Post_traj_abund / PP_base_tog
 
 model_fit
 #save
-ggsave("Figures/Manuscript/post_posterior_predictive.png", model_fit, width = 12, height = 9, units = "in", dpi = 600)
+#ggsave("Figures/Manuscript/post_posterior_predictive.png", model_fit, width = 12, height = 9, units = "in", dpi = 600)
 
 #harvest rate
 harvest_rates<-Npop_post %>% filter(year< 1974) %>% 
@@ -635,7 +628,7 @@ ggplot(harvest_rates) +
   theme(text = element_text(size = 12, family = "Arial"), 
         plot.tag.position = c(0, 1), 
         plot.tag = element_text(hjust = -3))
-ggsave("Figures/Manuscript/harvest_rate.png", width = 6, height = 4, units = "in", dpi = 600)
+#ggsave("Figures/Manuscript/harvest_rate.png", width = 6, height = 4, units = "in", dpi = 600)
 
 summary(harvest_rates$harvest_med)
 # Sensitivities -----------------------------------------------------------
@@ -693,6 +686,6 @@ sens_plots<-sens_r_postplot + sens_K_postplot + sens_Nmin_postplot + sens_N2024_
 sens_plots
 
 #save
-ggsave("Figures/Manuscript/sensitivities_posteriors.png", width = 8.5, height = 5, units = "in", dpi = 600)
+#ggsave("Figures/Manuscript/sensitivities_posteriors.png", width = 8.5, height = 5, units = "in", dpi = 600)
 
 

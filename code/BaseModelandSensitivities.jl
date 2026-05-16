@@ -14,7 +14,7 @@
 #Note that file paths for storing results should be specified
 
 #Zoe Rand
-#last updated 8/15/25
+#last updated 5/15/26 to include prior sampling
 
 using Optim
 using Turing
@@ -292,8 +292,12 @@ MCMCFit = function(N, CV, catches, nyears, Br_index, Ham_index,
         photo_idx, z, photo_id_switch, JARPA_switch, SOWER_switch, prior_r, fixed_s)
     postpred = predict(post_mod, chains, include_all = false)
     
+    
+    #get priors
+    priors  = sample(mod, Prior(), 100000)
+
     #return samples and posterior predictive
-    return(Chains = full_chains, PostPred = postpred)
+    return(Chains = full_chains, PostPred = postpred, Priors = priors)
     #return(full_chains)
 end
 
@@ -363,6 +367,11 @@ h5open("Code/Results/Fit_BaseModel_uniformR_112.h5", "w") do f
  h5open("Code/Results/PostPred_BaseModel_uniformR_112.h5", "w") do f
      write(f, fit4.PostPred)
  end
+
+ #saving priors
+h5open("Code/Results/Priors_BaseModel_uniformR.h5", "w") do f
+    write(f, fit4.Priors)
+end
 
  Telegram.sendMessage(tg, text = "Model 4 Complete")
 
